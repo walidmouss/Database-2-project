@@ -52,13 +52,31 @@ public class DBApp
 	public static ArrayList<String []> select(String tableName)
 	{
 		Table current_table = FileManager.loadTable(tableName);
-		return new ArrayList<String[]>();
+	    ArrayList<String[]> allPages = new ArrayList<>(); // thi is just an empty array to hold the record from all pages
+	    if (current_table != null){
+	    	for(Page curr_page : current_table.getPages()){ // loop on each pages in curr page
+	    		ArrayList<String[]> pageData = curr_page.getRecords(); // store data of each page in an array
+	    		allPages.addAll(pageData); // store all the data from all the page
+	    	}
+	    }
+		return allPages;
+		
 	}
 	
 	public static ArrayList<String []> select(String tableName, int pageNumber, int recordNumber)
 	{
+		ArrayList<String[]> result = new ArrayList<>(); // placeholder cuz for some reason we need to store this in an array not just a string 
+		Table current_table = FileManager.loadTable(tableName);
+		ArrayList<Page> allPages = current_table.getPages(); // this stores all pages in table
+		Page curr_page = allPages.get(pageNumber);
+		String[] curr_record = curr_page.getRecords().get(recordNumber);
+		result.add(curr_record);
+		return result;
 		
-		return new ArrayList<String[]>();
+		///////////////////////////////////////////////////////////////////////////////////
+		////////////////// THE PREVIOUS PART NEEDS IF ELSE FOR ERROR TRACKING /////////////
+		///////////////////////////////////////////////////////////////////////////////////
+		
 	}
 	
 	public static ArrayList<String []> select(String tableName, String[] cols, String[] vals)
