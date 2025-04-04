@@ -51,7 +51,7 @@ public class DBApp
 	
 	public static ArrayList<String []> select(String tableName)
 	{
-		
+		Table current_table = FileManager.loadTable(tableName);
 		return new ArrayList<String[]>();
 	}
 	
