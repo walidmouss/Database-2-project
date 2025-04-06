@@ -12,48 +12,77 @@ import org.junit.Test;
 
 public class DBApp
 {
-	static int dataPageSize = -100;
+	static int dataPageSize = 100;
 	
 	public static void createTable(String tableName, String[] columnsNames)
 	{
-		 File tableDirectory = new File(FileManager.directory , tableName);
-		    if (tableDirectory.exists()) {
-		        System.out.println("table already exist");
-		        return;
-		    }
-		    Table newTable = new Table(tableName , columnsNames);
-		    boolean success = FileManager.storeTable(tableName , newTable);
-		    
-		    if (success) {
-		        System.out.println("table" + tableName + "created successfull");
-		    } else {
-		        System.out.println("failed to create table" + tableName);
-		    }
+		File tableDirectory = new File(FileManager.directory , tableName);
+	    if (tableDirectory.exists()) {
+	        System.out.println("table already exist");
+	        return;
+	    }
+	    Table newTable = new Table(tableName , columnsNames);
+	    boolean success = FileManager.storeTable(tableName , newTable);
+	    
+	    if (success) {
+	        System.out.println("table" + tableName + "created successfull");
+	    } else {
+	        System.out.println("failed to create table" + tableName);
+	    }
 		
 	}
 	
 	public static void insert(String tableName, String[] record)
 	{
 		Table table = FileManager.loadTable(tableName);
-        if (table == null) 
+        if (table == null){
+        	System.out.println("couldnt find the table so we could insert ... bye");
         	return;
-
-        if (table.getPages().isEmpty() || table.getPages().get(table.getPages().size() - 1).getRecords().size() >= dataPageSize) { // second condition checks if last page is above limit
+        }
+        int pageLength = table.getPages().size() - 1;
+        if (table.getPages().isEmpty() || table.getPages().get(pageLength).getRecords().size() >= dataPageSize) { // second condition checks if last page is above limit
             Page newPage = new Page();
-            table.getPages().add(newPage);
+            newPage.getRecords().add(record);
+    	    ArrayList<Page> allPages = new ArrayList<>(); // set an empty array of pages
+    	    allPages = table.getPages(); // fill array with current pages in table
+    	    allPages.add(newPage); // add a new page
+    	    
+            table.setPages(allPages); // write to table
+            
+            
+            
+            FileManager.storeTable(tableName, table);
+        	System.out.println(allPages);
+        	System.out.println("inserted record in new page");
         }
         else{
-        	table.getPages().get(table.getPages().size() - 1).getRecords().add(record);
+        	ArrayList<String[]> allPageRecords = new ArrayList<>(); // set an empty array of pages
+        	allPageRecords = table.getPages().get(pageLength).getRecords(); // fill array with current pages in table
+        	allPageRecords.add(record); // add a new page
+
+    	    
+        	table.getPages().get(table.getPages().size() - 1).setRecords(allPageRecords);
+            FileManager.storeTable(tableName, table);
+        	System.out.println("inserted record in same page");
         }
-		
+        
+
 	}
+	
+	
+	
+	
+	
+	
+	
 	
 	public static ArrayList<String []> select(String tableName)
 	{
 		Table current_table = FileManager.loadTable(tableName);
 	    ArrayList<String[]> allPages = new ArrayList<>(); // thi is just an empty array to hold the record from all pages
 	    if (current_table != null){
-	    	for(Page curr_page : current_table.getPages()){ // loop on each pages in curr page
+	    	for(Page curr_page : current_table.getPages()){ // loop on each pages in curr table
+	    		
 	    		ArrayList<String[]> pageData = curr_page.getRecords(); // store data of each page in an array
 	    		allPages.addAll(pageData); // store all the data from all the page
 	    	}
@@ -62,13 +91,19 @@ public class DBApp
 		
 	}
 	
+	
+	
+	
+	
+	
+	
 	public static ArrayList<String []> select(String tableName, int pageNumber, int recordNumber)
 	{
 		ArrayList<String[]> result = new ArrayList<>(); // placeholder cuz for some reason we need to store this in an array not just a string 
-		Table current_table = FileManager.loadTable(tableName);
-		ArrayList<Page> allPages = current_table.getPages(); // this stores all pages in table
-		Page curr_page = allPages.get(pageNumber);
-		String[] curr_record = curr_page.getRecords().get(recordNumber);
+		
+		Page current_Page = FileManager.loadTablePage("fries", 0);
+		System.out.println(current_Page);
+		String[] curr_record = current_Page.getRecords().get(recordNumber);
 		result.add(curr_record);
 		return result;
 		
@@ -95,12 +130,11 @@ public class DBApp
 		ArrayList<Page> allPages = curr_table.getPages(); // this stores all pages in table
 		ArrayList<String[]> filteredRecords = new ArrayList<>();
 		for(Page page : allPages){
-			int i=0;
-			for(String[] record : page.getRecords()){
+			for(int i=0 ; i<page.getRecords().size() ; i++){
+				String[] record = page.getRecords().get(i);
 				if(record[col_index[i]] == vals[i]){
 					filteredRecords.add(record);
 				}
-				i++;
 			}
 		}
 		return filteredRecords;
@@ -121,32 +155,65 @@ public class DBApp
 	
 	public static void main(String []args) throws IOException
 	{
-		String[] columns = {"id", "name", "age"};
-	    
-	    // Creating table "Students"
-	    createTable("Students", columns);
-	    String[] r1 = {"1", "stud1", "SCS", "5", "0.9"};
-	    insert("student", r1);
-	    
-	    // Verify if the table exists
-	    File tableDirectory = new File(FileManager.directory, "Students");
-	    
-	    if (tableDirectory.exists()) {
-	        System.out.println(" Table 'Students' created successfully.");
-	    } else {
-	        System.out.println("Table creation failed.");
-	    }
-	    Table loadedTable = FileManager.loadTable("Students");
-	    
-	    if (loadedTable != null) {
-	        System.out.println("Table Loaded:");
-	        System.out.println("Table Name: " + loadedTable.getTableName());
-	        System.out.println("Columns: " + Arrays.toString(loadedTable.getColumnNames()));
-	    } else {
-	        System.out.println("Failed to load table.");
-	    }
-	    
-	   
+		// Define the column names for the "Students" table
+        String[] columns = {"id", "name", "major", "semester", "gpa"};
+        
+        // Step 1: Create the "Students" table
+        createTable("fries", columns);
+        /*
+        // Step 2: Insert the given rows into the "Students" table
+        String[] r1 = {"1", "stud1", "CS", "5", "0.9"};
+        String[] r2 = {"2", "stud2", "BI", "7", "1.2"};
+        String[] r3 = {"3", "stud3", "CS", "2", "2.4"};
+        String[] r4 = {"4", "stud4", "DMET", "9", "1.2"};
+        String[] r5 = {"5", "stud5", "BI", "4", "3.5"};
+        
+        insert("fries", r1);
+        insert("fries", r2);
+        insert("fries", r3);
+        insert("fries", r4);
+        insert("fries", r5);
+        
+        // Step 3: Select all rows from the "Students" table
+        
+        // Step 4: Output the entire table content
+        System.out.println("Output of selecting the whole table content:");
+        ArrayList<String[]> result1 = select("fries");
+        for (String[] array : result1) {
+        	for(String str : array){
+        		System.out.print(str + " ");
+        	}
+        	System.out.println();
+        }
+        
+        */
+        System.out.println("--------------------------------");
+        System.out.println("Output of selecting the output by position:");
+        ArrayList<String[]> result2 = select("fries", 1, 1);
+        for (String[] array : result2) {
+        	for (String str : array) {
+        		System.out.print(str + " ");
+        		
+        	}
+        	System.out.println();
+        }
+        
+        
+        /*
+        System.out.println("--------------------------------");
+        System.out.println("Output of selecting the output by column condition:");
+
+        ArrayList<String[]> result3 = select("fries", new String[]{"gpa"}, new String[]{"1.2"});
+
+        for (String[] array : result3) {
+            for (String str : array) {
+                System.out.print(str + " ");
+            }
+            System.out.println();
+        }
+
+        */
+        
 	}
 	
 	
