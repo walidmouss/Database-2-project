@@ -121,6 +121,7 @@ public class DBApp
 		
 		for(int i=0 ; i<cols.length ; i++){
 			for(int j=0 ; j<col_names.length ; j++){
+					
 				if(col_names[j].equals(cols[i])){
 					col_index[i] = j;
 				}
@@ -130,10 +131,13 @@ public class DBApp
 		ArrayList<Page> allPages = curr_table.getPages(); // this stores all pages in table
 		ArrayList<String[]> filteredRecords = new ArrayList<>();
 		for(Page page : allPages){
-			for(int i=0 ; i<page.getRecords().size() ; i++){
-				String[] record = page.getRecords().get(i);
-				if(record[col_index[i]] == vals[i]){
-					filteredRecords.add(record);
+			for(int j=0 ; j<cols.length ; j++){
+				for(int i=0 ; i<page.getRecords().size() ; i++){
+					String[] records = page.getRecords().get(i);
+					if(records[col_index[j]].equals(vals[j])){
+						filteredRecords.add(records);
+						
+					}
 				}
 			}
 		}
@@ -160,7 +164,7 @@ public class DBApp
         
         // Step 1: Create the "Students" table
         createTable("fries", columns);
-        /*
+        
         // Step 2: Insert the given rows into the "Students" table
         String[] r1 = {"1", "stud1", "CS", "5", "0.9"};
         String[] r2 = {"2", "stud2", "BI", "7", "1.2"};
@@ -186,7 +190,7 @@ public class DBApp
         	System.out.println();
         }
         
-        */
+        /*
         System.out.println("--------------------------------");
         System.out.println("Output of selecting the output by position:");
         ArrayList<String[]> result2 = select("fries", 1, 1);
@@ -198,8 +202,8 @@ public class DBApp
         	System.out.println();
         }
         
+        */
         
-        /*
         System.out.println("--------------------------------");
         System.out.println("Output of selecting the output by column condition:");
 
@@ -212,7 +216,7 @@ public class DBApp
             System.out.println();
         }
 
-        */
+        
         
 	}
 	
