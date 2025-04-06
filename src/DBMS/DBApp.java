@@ -38,9 +38,12 @@ public class DBApp
         if (table == null) 
         	return;
 
-        if (table.getPages().isEmpty() || table.getPages().get(table.getPages().size() - 1).getRecords().size() >= dataPageSize) {
+        if (table.getPages().isEmpty() || table.getPages().get(table.getPages().size() - 1).getRecords().size() >= dataPageSize) { // second condition checks if last page is above limit
             Page newPage = new Page();
             table.getPages().add(newPage);
+        }
+        else{
+        	table.getPages().get(table.getPages().size() - 1).getRecords().add(record);
         }
 		
 	}
