@@ -16,22 +16,18 @@ public class DBApp
 	
 	public static void createTable(String tableName, String[] columnsNames)
 	{
-		 File tableDirectory = new File(FileManager.directory, tableName);
+		 File tableDirectory = new File(FileManager.directory , tableName);
 		    if (tableDirectory.exists()) {
-		        System.out.println("Table already exists.");
+		        System.out.println("table already exist");
 		        return;
 		    }
-
-		    // Step 2: Create a Table object
-		    Table newTable = new Table(tableName, columnsNames);
-
-		    // Step 3: Store the table on the hard disk
-		    boolean success = FileManager.storeTable(tableName, newTable);
+		    Table newTable = new Table(tableName , columnsNames);
+		    boolean success = FileManager.storeTable(tableName , newTable);
 		    
 		    if (success) {
-		        System.out.println("Table '" + tableName + "' created successfully.");
+		        System.out.println("table" + tableName + "created successfull");
 		    } else {
-		        System.out.println("Failed to create table '" + tableName + "'.");
+		        System.out.println("failed to create table" + tableName);
 		    }
 		
 	}
@@ -81,8 +77,30 @@ public class DBApp
 	
 	public static ArrayList<String []> select(String tableName, String[] cols, String[] vals)
 	{
+		Table curr_table = FileManager.loadTable(tableName);
+		String[] col_names = curr_table.getColumnNames();
+		int[] col_index = new int[cols.length];
 		
-		return new ArrayList<String[]>();
+		for(int i=0 ; i<cols.length ; i++){
+			for(int j=0 ; j<col_names.length ; j++){
+				if(col_names[j].equals(cols[i])){
+					col_index[i] = j;
+				}
+			}
+		}
+		
+		ArrayList<Page> allPages = curr_table.getPages(); // this stores all pages in table
+		ArrayList<String[]> filteredRecords = new ArrayList<>();
+		for(Page page : allPages){
+			int i=0;
+			for(String[] record : page.getRecords()){
+				if(record[col_index[i]] == vals[i]){
+					filteredRecords.add(record);
+				}
+				i++;
+			}
+		}
+		return filteredRecords;
 	}
 	
 	public static String getFullTrace(String tableName)
