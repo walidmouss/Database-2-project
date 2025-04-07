@@ -83,6 +83,7 @@ public class DBApp
 	
 	public static ArrayList<String []> select(String tableName)
 	{
+		long start = System.currentTimeMillis();
 		Table current_table = FileManager.loadTable(tableName);
 	    ArrayList<String[]> allPages = new ArrayList<>(); // thi is just an empty array to hold the record from all pages
 	    if (current_table != null){
@@ -92,6 +93,10 @@ public class DBApp
 	    		allPages.addAll(pageData); // store all the data from all the page
 	    	}
 	    }
+        long end = System.currentTimeMillis();
+	    String log = "Select all pages:" + current_table.getPages().size() + ", records:" + allPages.size() + ", execution time (mil):" + (end-start);
+        trace.add(log);
+        
 		return allPages;
 		
 	}
@@ -182,7 +187,7 @@ public class DBApp
         
         // Step 1: Create the "Students" table
         createTable("potatoes", columns);
-        
+        /*
         // Step 2: Insert the given rows into the "Students" table
         String[] r1 = {"1", "stud1", "CS", "5", "0.9"};
         String[] r2 = {"2", "stud2", "BI", "7", "1.2"};
@@ -195,7 +200,7 @@ public class DBApp
         insert("potatoes", r3);
         insert("potatoes", r4);
         insert("potatoes", r5);
-        
+        */
         // Step 3: Select all rows from the "Students" table
         
         // Step 4: Output the entire table content
