@@ -183,13 +183,21 @@ public class DBApp
 	    for (String line : trace) {
 	        str.append(line).append("\n");
 	    }
+	    int recordsCount = 0;
+	    for(Page page : table.getPages()){
+	    	recordsCount += page.getRecords().size();
+	    }
+	    
+	    
+	    String pikachuuu = "Pages Count: " + table.getPages().size() + ", Records Count: " + recordsCount;
+
+        str.append(pikachuuu).append("\n");
 	    return str.toString();
 	}
 	
 	public static String getLastTrace(String tableName)
 	{
-		
-		return "";
+		return trace.get(trace.size()-1);
 	}
 	
 	
@@ -200,7 +208,7 @@ public class DBApp
         
         // Step 1: Create the "Students" table
         createTable("potatoes", columns);
-        /*
+        
         // Step 2: Insert the given rows into the "Students" table
         String[] r1 = {"1", "stud1", "CS", "5", "0.9"};
         String[] r2 = {"2", "stud2", "BI", "7", "1.2"};
@@ -213,7 +221,7 @@ public class DBApp
         insert("potatoes", r3);
         insert("potatoes", r4);
         insert("potatoes", r5);
-        */
+        
         // Step 3: Select all rows from the "Students" table
         
         // Step 4: Output the entire table content
@@ -254,10 +262,18 @@ public class DBApp
         
         System.out.println("--------------------------------"); 
         System.out.println("Full Trace of the table:"); 
-        System.out.println(getFullTrace("student"));
+        System.out.println(getFullTrace("potatoes"));
+        System.out.println("--------------------------------");
+        System.out.println("Last Trace of the table:");
+        System.out.println(getLastTrace("student"));
+        System.out.println("--------------------------------");
+        System.out.println("The trace of the Tables Folder:");
+        System.out.println(FileManager.trace());
+        FileManager.reset();
+        System.out.println("--------------------------------");
+        System.out.println("The trace of the Tables Folder after resetting:");
+        System.out.println(FileManager.trace());
 
-
-        
         
 	}
 	
