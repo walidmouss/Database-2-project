@@ -1,3 +1,4 @@
+
 package DBMS;
 
 import java.io.File;
@@ -12,7 +13,8 @@ import org.junit.Test;
 
 public class DBApp
 {
-	static int dataPageSize = 100;
+	static ArrayList<String> trace = new ArrayList<>();
+	static int dataPageSize = 2;
 	
 	public static void createTable(String tableName, String[] columnsNames)
 	{
@@ -34,6 +36,7 @@ public class DBApp
 	
 	public static void insert(String tableName, String[] record)
 	{
+		long start = System.currentTimeMillis();
 		Table table = FileManager.loadTable(tableName);
         if (table == null){
         	System.out.println("couldnt find the table so we could insert ... bye");
@@ -52,7 +55,6 @@ public class DBApp
             
             
             FileManager.storeTable(tableName, table);
-        	System.out.println(allPages);
         	System.out.println("inserted record in new page");
         }
         else{
@@ -65,6 +67,9 @@ public class DBApp
             FileManager.storeTable(tableName, table);
         	System.out.println("inserted record in same page");
         }
+        long end = System.currentTimeMillis();
+        String log = "Inserted:" + Arrays.toString(record) + ", at page number:" + pageLength + ", execution time (mil):" + (end - start);
+        trace.add(log);
         
 
 	}
@@ -100,12 +105,14 @@ public class DBApp
 	public static ArrayList<String []> select(String tableName, int pageNumber, int recordNumber)
 	{
 		ArrayList<String[]> result = new ArrayList<>(); // placeholder cuz for some reason we need to store this in an array not just a string 
-		
-		Page current_Page = FileManager.loadTablePage("fries", 0);
-		System.out.println(current_Page);
-		String[] curr_record = current_Page.getRecords().get(recordNumber);
-		result.add(curr_record);
-		return result;
+ 		Table current_table = FileManager.loadTable(tableName);
+ 		System.out.println(current_table);
+ 		ArrayList<Page> allPages = current_table.getPages(); // this stores all pages in table
+
+ 		Page curr_page = allPages.get(pageNumber);
+ 		String[] curr_record = curr_page.getRecords().get(recordNumber);
+ 		result.add(curr_record);
+ 		return result;
 		
 		///////////////////////////////////////////////////////////////////////////////////
 		////////////////// THE PREVIOUS PART NEEDS IF ELSE FOR ERROR TRACKING /////////////
@@ -144,10 +151,21 @@ public class DBApp
 		return filteredRecords;
 	}
 	
-	public static String getFullTrace(String tableName)
-	{
-		
-		return "";
+	public static String getFullTrace(String tableName) {
+	    Table table = FileManager.loadTable(tableName);
+	    if (table == null) {
+	        return "The table doesn't exist";
+	    }
+
+	    StringBuilder str = new StringBuilder();
+	    str.append("Table created name: ").append(table.getTableName())
+	       .append(", columnsNames: ").append(Arrays.toString(table.getColumnNames())).append("\n");
+
+        System.out.println("Output of selecting the whole table content:");
+	    for (String line : trace) {
+	        str.append(line).append("\n");
+	    }
+	    return str.toString();
 	}
 	
 	public static String getLastTrace(String tableName)
@@ -163,7 +181,7 @@ public class DBApp
         String[] columns = {"id", "name", "major", "semester", "gpa"};
         
         // Step 1: Create the "Students" table
-        createTable("fries", columns);
+        createTable("potatoes", columns);
         
         // Step 2: Insert the given rows into the "Students" table
         String[] r1 = {"1", "stud1", "CS", "5", "0.9"};
@@ -172,17 +190,17 @@ public class DBApp
         String[] r4 = {"4", "stud4", "DMET", "9", "1.2"};
         String[] r5 = {"5", "stud5", "BI", "4", "3.5"};
         
-        insert("fries", r1);
-        insert("fries", r2);
-        insert("fries", r3);
-        insert("fries", r4);
-        insert("fries", r5);
+        insert("potatoes", r1);
+        insert("potatoes", r2);
+        insert("potatoes", r3);
+        insert("potatoes", r4);
+        insert("potatoes", r5);
         
         // Step 3: Select all rows from the "Students" table
         
         // Step 4: Output the entire table content
         System.out.println("Output of selecting the whole table content:");
-        ArrayList<String[]> result1 = select("fries");
+        ArrayList<String[]> result1 = select("potatoes");
         for (String[] array : result1) {
         	for(String str : array){
         		System.out.print(str + " ");
@@ -190,10 +208,10 @@ public class DBApp
         	System.out.println();
         }
         
-        /*
+        
         System.out.println("--------------------------------");
         System.out.println("Output of selecting the output by position:");
-        ArrayList<String[]> result2 = select("fries", 1, 1);
+        ArrayList<String[]> result2 = select("potatoes", 1, 1);
         for (String[] array : result2) {
         	for (String str : array) {
         		System.out.print(str + " ");
@@ -202,12 +220,12 @@ public class DBApp
         	System.out.println();
         }
         
-        */
+        
         
         System.out.println("--------------------------------");
         System.out.println("Output of selecting the output by column condition:");
 
-        ArrayList<String[]> result3 = select("fries", new String[]{"gpa"}, new String[]{"1.2"});
+        ArrayList<String[]> result3 = select("potatoes", new String[]{"gpa"}, new String[]{"1.2"});
 
         for (String[] array : result3) {
             for (String str : array) {
@@ -215,6 +233,11 @@ public class DBApp
             }
             System.out.println();
         }
+        
+        System.out.println("--------------------------------"); 
+        System.out.println("Full Trace of the table:"); 
+        System.out.println(getFullTrace("student"));
+
 
         
         
