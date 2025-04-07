@@ -109,6 +109,7 @@ public class DBApp
 	
 	public static ArrayList<String []> select(String tableName, int pageNumber, int recordNumber)
 	{
+		long start = System.currentTimeMillis();
 		ArrayList<String[]> result = new ArrayList<>(); // placeholder cuz for some reason we need to store this in an array not just a string 
  		Table current_table = FileManager.loadTable(tableName);
  		System.out.println(current_table);
@@ -117,6 +118,11 @@ public class DBApp
  		Page curr_page = allPages.get(pageNumber);
  		String[] curr_record = curr_page.getRecords().get(recordNumber);
  		result.add(curr_record);
+ 		
+		long end = System.currentTimeMillis();
+	    String log = "Select pointer page:" + pageNumber + ", record:" + recordNumber + ", total output count:"+result.size() +", execution time (mil):" + (end-start);
+	    trace.add(log);
+	    
  		return result;
 		
 		///////////////////////////////////////////////////////////////////////////////////
@@ -127,6 +133,7 @@ public class DBApp
 	
 	public static ArrayList<String []> select(String tableName, String[] cols, String[] vals)
 	{
+		long start = System.currentTimeMillis();
 		Table curr_table = FileManager.loadTable(tableName);
 		String[] col_names = curr_table.getColumnNames();
 		int[] col_index = new int[cols.length];
@@ -153,6 +160,12 @@ public class DBApp
 				}
 			}
 		}
+		
+
+		long end = System.currentTimeMillis();
+	    String log = "Select condition:" + Arrays.toString(cols) + " -> " + Arrays.toString(vals) + ", Records per page:" +  ", records:" + filteredRecords.size() + ", execution time (mil):" + (end-start);
+	    trace.add(log);
+		
 		return filteredRecords;
 	}
 	
