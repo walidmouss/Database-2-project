@@ -25,8 +25,20 @@ public class DBApp {
         }
     }
     
+    
+    
+    ///////////////////////////////////////////////////////////////////////
+    /////////////////////////////INSERT FUNCTION///////////////////////////
+    ///////////////////////////////////////////////////////////////////////
+    
+    
+    
+    
+    static int currentPage = 0; //this is the page we insert in
     public static void insert(String tableName, String[] record) {
-        long start = System.currentTimeMillis();
+         
+    	
+    	long start = System.currentTimeMillis();
         Table table = FileManager.loadTable(tableName);
         if (table == null) {
             System.out.println("couldn't find the table so we could insert ... bye");
@@ -44,22 +56,24 @@ public class DBApp {
             FileManager.storeTablePage(tableName, 0, newPage);
             //System.out.println("inserted record in new page");
         } else {
-            Page lastPage = FileManager.loadTablePage(tableName, pageLength - 1);
-            if (lastPage.getRecords().size() >= dataPageSize) {
+            Page lastPage = FileManager.loadTablePage(tableName, currentPage);
+            if (lastPage.getRecords().size() == dataPageSize) {
                 newPage.getRecords().add(record);
                 table.getPages().add(newPage);
-                FileManager.storeTablePage(tableName, pageLength, newPage);
+                currentPage ++;
+                FileManager.storeTablePage(tableName, currentPage, newPage);
                 //System.out.println("last page full, inserted record in new page");
             } else {
                 lastPage.getRecords().add(record);
-                FileManager.storeTablePage(tableName, pageLength - 1, lastPage);
+                FileManager.storeTablePage(tableName, currentPage, lastPage);
                 //System.out.println("inserted record in existing page");
             }
         }
-        
+
+        //System.out.println("CURRENT PAGES ARE : " + table.getPages());
         FileManager.storeTable(tableName, table);
         long end = System.currentTimeMillis();
-        String log = "Inserted: " + Arrays.toString(record) + ", at page number: " + pageLength + ", execution time (mil): "+(end-start);
+        String log = "Inserted: " + Arrays.toString(record) + ", at page number: " + currentPage + ", execution time (mil): "+(end-start);
 
         traceMap.putIfAbsent(tableName, new ArrayList<>());
         traceMap.get(tableName).add(log);
@@ -73,10 +87,17 @@ public class DBApp {
 
         if (current_table != null) {
             int pageIndex = 0; // to keep track of which page we're reading for trace log
+
+            //System.out.println("CURRENT PAGE SIZE : " + current_table.getPages().size());
             for (int i=0 ; i< current_table.getPages().size(); i++) {
+                //System.out.println("CURRENT PAGES NUMBER IS : " + i);
+            	
             	Page curr_page = FileManager.loadTablePage(tableName, i);
-                ArrayList<String[]> pageData = curr_page.getRecords();
-                allRecords.addAll(pageData);
+            	ArrayList<String[]> pageData;
+            	//if(curr_page != null){  
+            	pageData = curr_page.getRecords();
+                 allRecords.addAll(pageData);
+//            	}
                 //System.out.println("Page " + pageIndex + ": " + pageData.size() + " record(s)");
                 pageIndex++;
             }
@@ -91,6 +112,12 @@ public class DBApp {
         return allRecords;
     }
 
+
+    ///////////////////////////////////////////////////////////////////////
+    /////////////////////////////SELECT WHOLE TABLE////////////////////////
+    ///////////////////////////////////////////////////////////////////////
+    
+    
     public static ArrayList<String[]> select(String tableName, int pageNumber, int recordNumber) {
         long start = System.currentTimeMillis();
         ArrayList<String[]> result = new ArrayList<>();
@@ -211,7 +238,7 @@ public class DBApp {
 
     public static void main(String[] args) throws IOException {
         String[] columns = {"id", "name", "major", "semester", "gpa"};
-        createTable("potatoes", columns);
+        createTable("pepsi", columns);
 
         String[] r1 = {"1", "stud1", "CS", "5", "0.9"};
         String[] r2 = {"2", "stud2", "BI", "7", "1.2"};
@@ -219,11 +246,11 @@ public class DBApp {
         String[] r4 = {"4", "stud4", "DMET", "9", "1.2"};
         String[] r5 = {"5", "stud5", "BI", "4", "3.5"};
 
-        insert("potatoes", r1);
-        insert("potatoes", r2);
-        insert("potatoes", r3);
-        insert("potatoes", r4);
-        insert("potatoes", r5);
+        insert("pepsi", r1);
+        insert("pepsi", r2);
+        insert("pepsi", r3);
+        insert("pepsi", r4);
+        insert("pepsi", r5);
         /*
         String[] columns2 = {"name" , "job"};
         createTable("macdonalds" , columns2);
@@ -237,7 +264,7 @@ public class DBApp {
         */
 
         System.out.println("Output of selecting the whole table content:");
-        ArrayList<String[]> result1 = select("potatoes");
+        ArrayList<String[]> result1 = select("pepsi");
 
         for (String[] array : result1) {
             for (String str : array) {
@@ -248,7 +275,7 @@ public class DBApp {
 
         System.out.println("--------------------------------");
         System.out.println("Output of selecting by position:");
-        ArrayList<String[]> result2 = select("potatoes", 1, 1);
+        ArrayList<String[]> result2 = select("pepsi", 1, 1);
         for (String[] array : result2) {
             for (String str : array) {
                 System.out.print(str + " ");
@@ -258,7 +285,7 @@ public class DBApp {
 
         System.out.println("--------------------------------");
         System.out.println("Output of selecting the output by column condition:");
-        ArrayList<String[]> result3 = select("potatoes", new String[]{"gpa"}, new String[]{"1.2"});
+        ArrayList<String[]> result3 = select("pepsi", new String[]{"gpa"}, new String[]{"1.2"});
         for (String[] array : result3) {
             for (String str : array) {
                 System.out.print(str + " ");
@@ -268,7 +295,7 @@ public class DBApp {
 
         System.out.println("--------------------------------");
         System.out.println("Full Trace of the table:");
-        System.out.println(getFullTrace("potatoes"));
+        System.out.println(getFullTrace("pepsi"));
         
 /*
         System.out.println("--------------------------------");
@@ -277,7 +304,7 @@ public class DBApp {
 */
         System.out.println("--------------------------------");
         System.out.println("Last Trace of the table:");
-        System.out.println(getLastTrace("potatoes"));
+        System.out.println(getLastTrace("pepsi"));
 
         System.out.println("--------------------------------");
         System.out.println("Trace of the Tables Folder:");
