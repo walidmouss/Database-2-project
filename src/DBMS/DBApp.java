@@ -25,7 +25,7 @@ public class DBApp {
             System.out.println("failed to create table " + tableName);
         }
     }
-
+    
     public static void insert(String tableName, String[] record) {
         long start = System.currentTimeMillis();
         Table table = FileManager.loadTable(tableName);
@@ -33,23 +33,35 @@ public class DBApp {
             System.out.println("couldn't find the table so we could insert ... bye");
             return;
         }
-        int pageLength = table.getPages().size() - 1;
-        if (table.getPages().isEmpty() || table.getPages().get(pageLength).getRecords().size() >= dataPageSize) { // second condition checks if last page is above limit
-            Page newPage = new Page();
+
+        int pageLength = table.getPages().size();
+        System.out.println("Current page count: " + pageLength);
+
+        if(pageLength == 0)
+            System.out.println("hakoona matata");
+
+        Page newPage = new Page();
+
+        if (pageLength == 0) {
             newPage.getRecords().add(record);
             table.getPages().add(newPage);
+            FileManager.storeTablePage(tableName, 0, newPage);
             System.out.println("inserted record in new page");
         } else {
-            table.getPages().get(pageLength).getRecords().add(record);
-            System.out.println("inserted record in same page");
+            Page lastPage = FileManager.loadTablePage(tableName, pageLength - 1);
+            if (lastPage.getRecords().size() >= dataPageSize) {
+                newPage.getRecords().add(record);
+                table.getPages().add(newPage);
+                FileManager.storeTablePage(tableName, pageLength, newPage);
+                System.out.println("last page full, inserted record in new page");
+            } else {
+                lastPage.getRecords().add(record);
+                FileManager.storeTablePage(tableName, pageLength - 1, lastPage);
+                System.out.println("inserted record in existing page");
+            }
         }
 
         FileManager.storeTable(tableName, table);
-        long end = System.currentTimeMillis();
-        String log = "Inserted: " + Arrays.toString(record) + ", at page number: " + (table.getPages().size()-1)+ ", execution time (mil): "+(end-start);
-
-        traceMap.putIfAbsent(tableName, new ArrayList<>());
-        traceMap.get(tableName).add(log);
     }
 
     public static ArrayList<String[]> select(String tableName) {
@@ -185,7 +197,7 @@ public class DBApp {
         insert("potatoes", r3);
         insert("potatoes", r4);
         insert("potatoes", r5);
-        
+        /*
         String[] columns2 = {"name" , "job"};
         createTable("macdonalds" , columns2);
         
@@ -195,7 +207,7 @@ public class DBApp {
         insert("macdonalds", s1);
         insert("macdonalds", s2);
         
-        
+        */
 
         System.out.println("Output of selecting the whole table content:");
         ArrayList<String[]> result1 = select("potatoes");
