@@ -70,6 +70,10 @@ public class DBAppTests
 		assertTrue("The trace String inside a table should contain its name.", tableTrace0.contains("h06h"));
 		for(int i=0;i<cols0.length;i++)
 		{
+			if (!tableTrace0.contains(cols0[i])) {
+		        System.out.println("Actual trace: " + tableTrace0);
+		        System.out.println("Expected to contain: " + cols0[i]);
+		    }
 			assertTrue("The trace String inside a table should contain its columns names.", tableTrace0.contains(cols0[i]));
 		}
 		String[] cols1 = {"r9pe","f2c","dtq0","j4","a249","y6k"};

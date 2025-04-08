@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 
 public class DBApp {
@@ -24,6 +25,14 @@ public class DBApp {
         	System.out.println("failed to create table " + tableName);
             //System.out.println("table " + tableName + " created successfully");
         }
+
+        StringBuilder str = new StringBuilder();
+        str.append("Table created name:").append(tableName).append(", columnsNames:").append(Arrays.toString(columnsNames));
+
+        traceMap.put(tableName, new ArrayList<>(Collections.singletonList(str.toString())));
+
+    
+    
     }
     
     
@@ -85,7 +94,7 @@ public class DBApp {
         //System.out.println("CURRENT PAGES ARE : " + table.getPages());
         FileManager.storeTable(tableName, table);
         long end = System.currentTimeMillis();
-        String log = "Inserted: " + Arrays.toString(record) + ", at page number: " + currentPage + ", execution time (mil): "+(end-start);
+        String log = "Inserted:" + Arrays.toString(record) + ", at page number:" + currentPage + ", execution time (mil): "+(end-start);
 
         traceMap.putIfAbsent(tableName, new ArrayList<>());
         traceMap.get(tableName).add(log);
@@ -117,7 +126,7 @@ public class DBApp {
         }
 
         long end = System.currentTimeMillis();
-        String log = "Select all pages: " + pageCount + ", records: " + allRecords.size()+ ", execution time (mil): " + (end - start);
+        String log = "Select all pages:" + pageCount + ", records:" + allRecords.size()+ ", execution time (mil):" + (end - start);
         traceMap.putIfAbsent(tableName, new ArrayList<>());
         traceMap.get(tableName).add(log);
 
@@ -162,6 +171,10 @@ public class DBApp {
     }
 
 
+    
+    ///////////////////////////////////////////////////////////////////////////////////
+    //////////////////////////////SELECT WHOLE TABLE///////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////////////////
     
     
     public static ArrayList<String[]> select(String tableName, String[] cols, String[] value) {
@@ -211,7 +224,7 @@ public class DBApp {
         }
  
         long end = System.currentTimeMillis();
-        String log = "Select condition: " + Arrays.toString(cols) + "->" + Arrays.toString(value)+", Records per page: " + recordPerPage + ", records: " + filteredRecords.size()+ ", execution time (mil): " + (end - start);
+        String log = "Select condition:" + Arrays.toString(cols) + "->" + Arrays.toString(value)+", Records per page:" + recordPerPage + ", records:" + filteredRecords.size()+ ", execution time (mil): " + (end - start);
         if (!traceMap.containsKey(tableName)) {
             traceMap.put(tableName, new ArrayList<>());
         }
@@ -220,7 +233,10 @@ public class DBApp {
     }
 
     
-    
+
+    ///////////////////////////////////////////////////////////////////////////////////
+    ////////////////////////////////GET FULL TRACE/////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////////////////
     
     
     public static String getFullTrace(String tableName) {
@@ -228,8 +244,6 @@ public class DBApp {
         if (table == null) return "The table doesn't exist";
 
         StringBuilder str = new StringBuilder();
-        str.append("Table name: ").append(table.getTableName()).append(", Columns: ").append(Arrays.toString(table.getColumnNames())).append("\n");
-
         ArrayList<String> tableTrace = traceMap.getOrDefault(tableName, new ArrayList<>());
         for (String line : tableTrace) {
             str.append(line).append("\n");
@@ -270,17 +284,9 @@ public class DBApp {
         insert("pepsi", r3);
         insert("pepsi", r4);
         insert("pepsi", r5);
-        /*
-        String[] columns2 = {"name" , "job"};
-        createTable("macdonalds" , columns2);
         
-        String[] s1 = {"john" , "burger flipper"};
-        String[] s2 = {"hamza" , "fries stirrer"};
-
-        insert("macdonalds", s1);
-        insert("macdonalds", s2);
         
-        */
+        
 
         System.out.println("Output of selecting the whole table content:");
         ArrayList<String[]> result1 = select("pepsi");
@@ -316,11 +322,7 @@ public class DBApp {
         System.out.println("Full Trace of the table:");
         System.out.println(getFullTrace("pepsi"));
         
-/*
-        System.out.println("--------------------------------");
-        System.out.println("Full Trace of the table:");
-        System.out.println(getFullTrace("macdonalds"));
-*/
+
         System.out.println("--------------------------------");
         System.out.println("Last Trace of the table:");
         System.out.println(getLastTrace("pepsi"));
