@@ -37,9 +37,6 @@ public class DBApp {
         int pageLength = table.getPages().size();
         System.out.println("Current page count: " + pageLength);
 
-        if(pageLength == 0)
-            System.out.println("hakoona matata");
-
         Page newPage = new Page();
 
         if (pageLength == 0) {
@@ -62,6 +59,11 @@ public class DBApp {
         }
 
         FileManager.storeTable(tableName, table);
+        long end = System.currentTimeMillis();
+        String log = "Inserted: " + Arrays.toString(record) + ", at page number: " + pageLength + ", execution time (mil): "+(end-start);
+
+        traceMap.putIfAbsent(tableName, new ArrayList<>());
+        traceMap.get(tableName).add(log);
     }
 
     public static ArrayList<String[]> select(String tableName) {
@@ -72,7 +74,8 @@ public class DBApp {
 
         if (current_table != null) {
             int pageIndex = 0; // to keep track of which page we're reading for trace log
-            for (Page curr_page : current_table.getPages()) {
+            for (int i=0 ; i< current_table.getPages().size(); i++) {
+            	Page curr_page = FileManager.loadTablePage(tableName, i);
                 ArrayList<String[]> pageData = curr_page.getRecords();
                 allRecords.addAll(pageData);
                 //System.out.println("Page " + pageIndex + ": " + pageData.size() + " record(s)");
@@ -99,7 +102,7 @@ public class DBApp {
             return result;
         }
 
-        Page curr_page = current_table.getPages().get(pageNumber);
+        Page curr_page = FileManager.loadTablePage(tableName, pageNumber);
         if (recordNumber >= curr_page.getRecords().size()) {
             System.out.println("Invalid record number");
             return result;
@@ -129,7 +132,8 @@ public class DBApp {
         }
 
         ArrayList<String[]> filteredRecords = new ArrayList<>();
-        for (Page page : curr_table.getPages()) {
+        for (int j=0 ; j<curr_table.getPages().size() ; j++) {
+        	Page page = FileManager.loadTablePage(tableName, j);
             for (String[] record : page.getRecords()) {
                 boolean cond_met = true;
                 for (int i = 0; i < cols.length; i++) {
@@ -164,7 +168,8 @@ public class DBApp {
         }
 
         int recordsCount = 0;
-        for (Page page : table.getPages()) {
+        for (int i=0 ; i< table.getPages().size(); i++) {
+        	Page page = FileManager.loadTablePage(tableName, i);
             recordsCount += page.getRecords().size();
         }
 
@@ -243,11 +248,11 @@ public class DBApp {
         System.out.println("Full Trace of the table:");
         System.out.println(getFullTrace("potatoes"));
         
-
+/*
         System.out.println("--------------------------------");
         System.out.println("Full Trace of the table:");
         System.out.println(getFullTrace("macdonalds"));
-
+*/
         System.out.println("--------------------------------");
         System.out.println("Last Trace of the table:");
         System.out.println(getLastTrace("potatoes"));
