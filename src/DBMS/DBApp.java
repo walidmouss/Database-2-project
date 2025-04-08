@@ -211,7 +211,7 @@ public class DBApp {
         }
  
         long end = System.currentTimeMillis();
-        String log = "Select condition: " + Arrays.toString(cols) + " -> " + Arrays.toString(value)+ ",Records per page: " + recordPerPage + ", records: " + filteredRecords.size()+ ", execution time (mil): " + (end - start);
+        String log = "Select condition: " + Arrays.toString(cols) + "->" + Arrays.toString(value)+ ",Records per page: " + recordPerPage + ", records: " + filteredRecords.size()+ ", execution time (mil): " + (end - start);
         if (!traceMap.containsKey(tableName)) {
             traceMap.put(tableName, new ArrayList<>());
         }

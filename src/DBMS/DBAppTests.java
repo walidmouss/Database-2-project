@@ -919,6 +919,8 @@ public class DBAppTests
 		}
 		String selectTrace0 = DBApp.getLastTrace("ar");
 		assertTrue("Conditional selection trace should start with the keyword -Select condition-.", selectTrace0.startsWith("Select condition"));
+		System.out.println("Actual trace: " + selectTrace0);
+		System.out.println("Expected: " + Arrays.toString(ConditionColumns0)+"->"+Arrays.toString(ConditionColumnsValues0));
 		assertTrue("Conditional selection trace should report the condition of selection correctly.", selectTrace0.contains(Arrays.toString(ConditionColumns0)+"->"+Arrays.toString(ConditionColumnsValues0)));
 		assertTrue("Conditional selection trace should report the numbers of records per pages correctly.", selectTrace0.contains(pagesCounts0.toString()));
 		assertTrue("Conditional selection trace should report the number of records correctly.", selectTrace0.contains("records:"+1));
