@@ -19,10 +19,9 @@ public class DBApp {
         Table newTable = new Table(tableName, columnsNames);
         boolean success = FileManager.storeTable(tableName, newTable);
 
-        if (success) {
-            System.out.println("table " + tableName + " created successfully");
-        } else {
-            System.out.println("failed to create table " + tableName);
+        if (!success) {
+        	System.out.println("failed to create table " + tableName);
+            //System.out.println("table " + tableName + " created successfully");
         }
     }
     
@@ -35,7 +34,7 @@ public class DBApp {
         }
 
         int pageLength = table.getPages().size();
-        System.out.println("Current page count: " + pageLength);
+        //System.out.println("Current page count: " + pageLength);
 
         Page newPage = new Page();
 
@@ -43,21 +42,21 @@ public class DBApp {
             newPage.getRecords().add(record);
             table.getPages().add(newPage);
             FileManager.storeTablePage(tableName, 0, newPage);
-            System.out.println("inserted record in new page");
+            //System.out.println("inserted record in new page");
         } else {
             Page lastPage = FileManager.loadTablePage(tableName, pageLength - 1);
             if (lastPage.getRecords().size() >= dataPageSize) {
                 newPage.getRecords().add(record);
                 table.getPages().add(newPage);
                 FileManager.storeTablePage(tableName, pageLength, newPage);
-                System.out.println("last page full, inserted record in new page");
+                //System.out.println("last page full, inserted record in new page");
             } else {
                 lastPage.getRecords().add(record);
                 FileManager.storeTablePage(tableName, pageLength - 1, lastPage);
-                System.out.println("inserted record in existing page");
+                //System.out.println("inserted record in existing page");
             }
         }
-
+        
         FileManager.storeTable(tableName, table);
         long end = System.currentTimeMillis();
         String log = "Inserted: " + Arrays.toString(record) + ", at page number: " + pageLength + ", execution time (mil): "+(end-start);
@@ -118,6 +117,8 @@ public class DBApp {
         return result;
     }
 
+    
+    
     public static ArrayList<String[]> select(String tableName, String[] cols, String[] value) {
         long start = System.currentTimeMillis();
         Table curr_table = FileManager.loadTable(tableName);
@@ -126,28 +127,45 @@ public class DBApp {
         for (int i = 0; i < cols.length; i++) {
             for (int j = 0; j < col_names.length; j++) {
                 if (col_names[j].equals(cols[i])) 
-                    col_index[i] = j;
+                    col_index[i] = j; // stores position of cols in actual collumn table
                 
             }
         }
-
-        ArrayList<String[]> filteredRecords = new ArrayList<>();
-        for (int j=0 ; j<curr_table.getPages().size() ; j++) {
+        
+        ArrayList<ArrayList<Integer>> recordPerPage = new ArrayList<>();
+        ArrayList<Integer> helperArray = new ArrayList<>();
+    	ArrayList<String[]> filteredRecords = new ArrayList<>();
+        
+        
+        for (int j=0 ; j<curr_table.getPages().size() ; j++) { //loops on pages in table
+        	int recordsCounter = 0;
         	Page page = FileManager.loadTablePage(tableName, j);
-            for (String[] record : page.getRecords()) {
-                boolean cond_met = true;
+            for (String[] record : page.getRecords()) {// loops on each record in current page
+                boolean cond_met = false;
                 for (int i = 0; i < cols.length; i++) {
-                    if (!record[col_index[i]].equals(value[i])) {
-                        cond_met = false;
+                    if (record[col_index[i]].equals(value[i])) {
+                        cond_met = true;
+                        //System.out.println("record [col_index] : " + record[col_index[i]]);
+                        //System.out.println("value[i] : " + value[i]);
+                        //System.out.println("page (j) : " + j);
+                        recordsCounter++; 
+                        helperArray = new ArrayList<>();
+                        helperArray.add(0, j);
+                        helperArray.add(1, recordsCounter);
+                        recordPerPage.add(j, helperArray);
+                        //System.out.println("helper array : " + helperArray);
+                        //System.out.println("page we are storing in : " + j);
+                        //System.out.println("records count : " + recordPerPage);
+                        //System.out.println();
                         break;
                     }
                 }
                 if (cond_met) filteredRecords.add(record);
             }
         }
-
+ 
         long end = System.currentTimeMillis();
-        String log = "Select condition: " + Arrays.toString(cols) + " -> " + Arrays.toString(value)+ ", records: " + filteredRecords.size()+ ", execution time (mil): " + (end - start);
+        String log = "Select condition: " + Arrays.toString(cols) + " -> " + Arrays.toString(value)+ ",Records per page: " + recordPerPage + ", records: " + filteredRecords.size()+ ", execution time (mil): " + (end - start);
         if (!traceMap.containsKey(tableName)) {
             traceMap.put(tableName, new ArrayList<>());
         }
@@ -155,6 +173,10 @@ public class DBApp {
         return filteredRecords;
     }
 
+    
+    
+    
+    
     public static String getFullTrace(String tableName) {
         Table table = FileManager.loadTable(tableName);
         if (table == null) return "The table doesn't exist";
@@ -235,7 +257,7 @@ public class DBApp {
         }
 
         System.out.println("--------------------------------");
-        System.out.println("Output of selecting by column condition:");
+        System.out.println("Output of selecting the output by column condition:");
         ArrayList<String[]> result3 = select("potatoes", new String[]{"gpa"}, new String[]{"1.2"});
         for (String[] array : result3) {
             for (String str : array) {
