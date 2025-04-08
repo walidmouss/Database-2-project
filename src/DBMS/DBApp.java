@@ -9,6 +9,7 @@ import java.util.HashMap;
 public class DBApp {
     static HashMap<String, ArrayList<String>> traceMap = new HashMap<>();
     static int dataPageSize = 2;
+    static String table_name = "hakoona matata";
 
     public static void createTable(String tableName, String[] columnsNames) {
         File tableDirectory = new File(FileManager.directory, tableName);
@@ -37,6 +38,10 @@ public class DBApp {
     static int currentPage = 0; //this is the page we insert in
     public static void insert(String tableName, String[] record) {
          
+    	if(table_name != tableName){
+    		currentPage = 0;
+    		table_name = tableName;
+    	}
     	
     	long start = System.currentTimeMillis();
         Table table = FileManager.loadTable(tableName);
@@ -49,14 +54,21 @@ public class DBApp {
         //System.out.println("Current page count: " + pageLength);
 
         Page newPage = new Page();
-
+        Page lastPage = new Page();
         if (pageLength == 0) {
             newPage.getRecords().add(record);
             table.getPages().add(newPage);
             FileManager.storeTablePage(tableName, 0, newPage);
             //System.out.println("inserted record in new page");
         } else {
-            Page lastPage = FileManager.loadTablePage(tableName, currentPage);
+        	if(FileManager.loadTablePage(tableName, currentPage) == null){
+
+                System.out.println("null pointer for page ya bashmohandes");
+                
+        	}
+        	else{
+        		lastPage = FileManager.loadTablePage(tableName, currentPage);
+        	}
             if (lastPage.getRecords().size() == dataPageSize) {
                 newPage.getRecords().add(record);
                 table.getPages().add(newPage);
