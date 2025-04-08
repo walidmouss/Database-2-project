@@ -129,32 +129,38 @@ public class DBApp {
     /////////////////////////////SELECT WHOLE TABLE////////////////////////
     ///////////////////////////////////////////////////////////////////////
     
-    
     public static ArrayList<String[]> select(String tableName, int pageNumber, int recordNumber) {
         long start = System.currentTimeMillis();
         ArrayList<String[]> result = new ArrayList<>();
+        
         Table current_table = FileManager.loadTable(tableName);
-
-        if (current_table == null || pageNumber >= current_table.getPages().size()) {
+        if (current_table == null || pageNumber < 0 || pageNumber >= current_table.getPages().size()) {
             System.out.println("Invalid table or page number");
             return result;
         }
 
         Page curr_page = FileManager.loadTablePage(tableName, pageNumber);
-        if (recordNumber >= curr_page.getRecords().size()) {
-            System.out.println("Invalid record number");
+        if (curr_page == null) {
+            System.out.println("Page data is missing (null)");
+            return result;
+        }
+
+        if (recordNumber < 0 || recordNumber >= curr_page.getRecords().size()) {
+            System.out.println("Invalid record number: " + recordNumber + " for page size " + curr_page.getRecords().size());
             return result;
         }
 
         result.add(curr_page.getRecords().get(recordNumber));
 
         long end = System.currentTimeMillis();
-        String log = "Select pointer page: " + pageNumber + ", record: " + recordNumber +", total output count: " + result.size() +", execution time (mil): " + (end - start);
+        String log = "Select pointer page: " + pageNumber + ", record: " + recordNumber +
+                     ", total output count: " + result.size() + ", execution time (mil): " + (end - start);
 
         traceMap.putIfAbsent(tableName, new ArrayList<>());
         traceMap.get(tableName).add(log);
         return result;
     }
+
 
     
     
@@ -191,7 +197,8 @@ public class DBApp {
                         helperArray = new ArrayList<>();
                         helperArray.add(0, j);
                         helperArray.add(1, recordsCounter);
-                        recordPerPage.add(j, helperArray);
+                        recordPerPage.add(helperArray);
+                        
                         //System.out.println("helper array : " + helperArray);
                         //System.out.println("page we are storing in : " + j);
                         //System.out.println("records count : " + recordPerPage);
