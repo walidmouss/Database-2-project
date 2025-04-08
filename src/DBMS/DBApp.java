@@ -153,8 +153,8 @@ public class DBApp {
         result.add(curr_page.getRecords().get(recordNumber));
 
         long end = System.currentTimeMillis();
-        String log = "Select pointer page: " + pageNumber + ", record: " + recordNumber +
-                     ", total output count: " + result.size() + ", execution time (mil): " + (end - start);
+        String log = "Select pointer page:" + pageNumber + ", record:" + recordNumber +
+                     ", total output count:" + result.size() + ", execution time (mil):" + (end - start);
 
         traceMap.putIfAbsent(tableName, new ArrayList<>());
         traceMap.get(tableName).add(log);
@@ -211,7 +211,7 @@ public class DBApp {
         }
  
         long end = System.currentTimeMillis();
-        String log = "Select condition: " + Arrays.toString(cols) + "->" + Arrays.toString(value)+ ",Records per page: " + recordPerPage + ", records: " + filteredRecords.size()+ ", execution time (mil): " + (end - start);
+        String log = "Select condition: " + Arrays.toString(cols) + "->" + Arrays.toString(value)+", Records per page: " + recordPerPage + ", records: " + filteredRecords.size()+ ", execution time (mil): " + (end - start);
         if (!traceMap.containsKey(tableName)) {
             traceMap.put(tableName, new ArrayList<>());
         }
