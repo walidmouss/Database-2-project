@@ -10,7 +10,7 @@ import java.util.HashMap;
 public class DBApp {
     static HashMap<String, ArrayList<String>> traceMap = new HashMap<>();
     static int dataPageSize = 2;
-    static String table_name = "hakoona matata";
+    static String curr_table_name = "hakoona matata";
 
     public static void createTable(String tableName, String[] columnsNames) {
         File tableDirectory = new File(FileManager.directory, tableName);
@@ -47,9 +47,9 @@ public class DBApp {
     static int currentPage = 0; //this is the page we insert in
     public static void insert(String tableName, String[] record) {
          
-    	if(table_name != tableName){
+    	if(!curr_table_name.equals(tableName)){
     		currentPage = 0;
-    		table_name = tableName;
+    		curr_table_name = tableName;
     	}
     	
     	long start = System.currentTimeMillis();
@@ -176,61 +176,75 @@ public class DBApp {
     //////////////////////////////CONDITIONAL SELECT///////////////////////////////////
     ///////////////////////////////////////////////////////////////////////////////////
     
-    
-    public static ArrayList<String[]> select(String tableName, String[] cols, String[] value) {
+    public static ArrayList<String[]> select(String tableName, String[] cols, String[] values) {
         long start = System.currentTimeMillis();
-        Table curr_table = FileManager.loadTable(tableName);
-        String[] col_names = curr_table.getColumnNames();
-        int[] col_index = new int[cols.length];
+
+        Table table = FileManager.loadTable(tableName);
+        if (table == null) {
+            System.out.println("Table not found: " + tableName);
+            return new ArrayList<>();
+        }
+
+        String[] columnNames = table.getColumnNames();
+        ArrayList<Page> pages = table.getPages();
+        ArrayList<String[]> matchingRecords = new ArrayList<>();
+
+        int[] colIndexes = new int[cols.length];
         for (int i = 0; i < cols.length; i++) {
-            for (int j = 0; j < col_names.length; j++) {
-                if (col_names[j].equals(cols[i])) 
-                    col_index[i] = j; // stores position of cols in actual collumn table
-                
+            boolean found = false;
+            for (int j = 0; j < columnNames.length; j++) {
+                if (columnNames[j].equals(cols[i])) {
+                    colIndexes[i] = j;
+                    found = true;
+                    break;
+                }
+            }
+            if (!found) {
+                System.out.println("Column not found: " + cols[i]);
+                return new ArrayList<>();
             }
         }
-        
+
         ArrayList<ArrayList<Integer>> recordPerPage = new ArrayList<>();
-        ArrayList<Integer> helperArray = new ArrayList<>();
-    	ArrayList<String[]> filteredRecords = new ArrayList<>();
-        
-        
-        for (int j=0 ; j<curr_table.getPages().size() ; j++) { //loops on pages in table
-        	int recordsCounter = 0;
-        	Page page = FileManager.loadTablePage(tableName, j);
-            for (String[] record : page.getRecords()) {// loops on each record in current page
-                boolean cond_met = false;
+
+        for (int pageIndex = 0; pageIndex < pages.size(); pageIndex++) {
+            Page page = FileManager.loadTablePage(tableName, pageIndex);
+            int matchCountInPage = 0;
+            for (String[] record : page.getRecords()) {
+                boolean matchesAll = true;
                 for (int i = 0; i < cols.length; i++) {
-                    if (record[col_index[i]].equals(value[i])) {
-                        cond_met = true;
-                        //System.out.println("record [col_index] : " + record[col_index[i]]);
-                        //System.out.println("value[i] : " + value[i]);
-                        //System.out.println("page (j) : " + j);
-                        recordsCounter++; 
-                        helperArray = new ArrayList<>();
-                        helperArray.add(0, j);
-                        helperArray.add(1, recordsCounter);
-                        recordPerPage.add(helperArray);
-                        
-                        //System.out.println("helper array : " + helperArray);
-                        //System.out.println("page we are storing in : " + j);
-                        //System.out.println("records count : " + recordPerPage);
-                        //System.out.println();
+                    if (!record[colIndexes[i]].equals(values[i])) {
+                        matchesAll = false;
                         break;
                     }
                 }
-                if (cond_met) filteredRecords.add(record);
+                if (matchesAll) {
+                    matchingRecords.add(record);
+                    matchCountInPage++;
+                }
+            }
+            if (matchCountInPage > 0) {
+                ArrayList<Integer> entry = new ArrayList<>();
+                entry.add(pageIndex);
+                entry.add(matchCountInPage);
+                recordPerPage.add(entry);
             }
         }
- 
+
         long end = System.currentTimeMillis();
-        String log = "Select condition:" + Arrays.toString(cols) + "->" + Arrays.toString(value)+", Records per page:" + recordPerPage + ", records:" + filteredRecords.size()+ ", execution time (mil): " + (end - start);
+        String log = "Select condition:" + Arrays.toString(cols) + "->" + Arrays.toString(values)
+                + ", Records per page:" + recordPerPage
+                + ", records:" + matchingRecords.size()
+                + ", execution time (mil):" + (end - start);
+
         if (!traceMap.containsKey(tableName)) {
             traceMap.put(tableName, new ArrayList<>());
         }
         traceMap.get(tableName).add(log);
-        return filteredRecords;
+
+        return matchingRecords;
     }
+
 
     
 
