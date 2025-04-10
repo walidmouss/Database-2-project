@@ -177,9 +177,12 @@ public class DBApp {
     ///////////////////////////////////////////////////////////////////////////////////
     
     public static ArrayList<String[]> select(String tableName, String[] cols, String[] values) {
+      // measuring the execution time for logging purposes
         long start = System.currentTimeMillis();
 
+        // loading the table using the FileManager
         Table table = FileManager.loadTable(tableName);
+        // if the table doesn't exist, we print a message and return an empty list
         if (table == null) {
             System.out.println("Table not found: " + tableName);
             return new ArrayList<>();
@@ -189,6 +192,7 @@ public class DBApp {
         ArrayList<Page> pages = table.getPages();
         ArrayList<String[]> matchingRecords = new ArrayList<>();
 
+        // for each column in the query, we find its index in the actual table columns
         int[] colIndexes = new int[cols.length];
         for (int i = 0; i < cols.length; i++) {
             boolean found = false;
@@ -199,6 +203,7 @@ public class DBApp {
                     break;
                 }
             }
+            // if the column is not found in the table, we print a message and stop
             if (!found) {
                 System.out.println("Column not found: " + cols[i]);
                 return new ArrayList<>();
@@ -207,22 +212,27 @@ public class DBApp {
 
         ArrayList<ArrayList<Integer>> recordPerPage = new ArrayList<>();
 
+        // we loop over each page in the table
         for (int pageIndex = 0; pageIndex < pages.size(); pageIndex++) {
             Page page = FileManager.loadTablePage(tableName, pageIndex);
             int matchCountInPage = 0;
+            // we loop through each record in the page
             for (String[] record : page.getRecords()) {
                 boolean matchesAll = true;
+                // er check if the record matches all the conditions
                 for (int i = 0; i < cols.length; i++) {
                     if (!record[colIndexes[i]].equals(values[i])) {
                         matchesAll = false;
                         break;
                     }
                 }
+                // if the record matches, we add it to the result and count it
                 if (matchesAll) {
                     matchingRecords.add(record);
                     matchCountInPage++;
                 }
             }
+            // if there were matching records on this page, we log the info
             if (matchCountInPage > 0) {
                 ArrayList<Integer> entry = new ArrayList<>();
                 entry.add(pageIndex);
@@ -232,11 +242,13 @@ public class DBApp {
         }
 
         long end = System.currentTimeMillis();
+        // building a log string to describe what was done
         String log = "Select condition:" + Arrays.toString(cols) + "->" + Arrays.toString(values)
                 + ", Records per page:" + recordPerPage
                 + ", records:" + matchingRecords.size()
                 + ", execution time (mil):" + (end - start);
 
+        // if this table has no trace history yet, we create one
         if (!traceMap.containsKey(tableName)) {
             traceMap.put(tableName, new ArrayList<>());
         }
