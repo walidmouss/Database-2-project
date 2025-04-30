@@ -277,7 +277,7 @@ public class DBApp {
          int colIndex = -1;
          
          for(int i=0 ; i<columnNames.length ; i++){
-        	 if(columnNames[i] == colName){
+        	 if(columnNames[i].equals(colName)){
         		 colIndex = i;
         	 }
          }
@@ -314,6 +314,9 @@ public class DBApp {
     
     public static String getValueBits(String tableName, String colName, String value){
     	BitmapIndex ourBitmap = FileManager.loadTableIndex(tableName, colName);
+    	if(ourBitmap == null){
+    		System.out.print("Hakoona matata");
+    	}
     	StringBuilder sb = new StringBuilder();
     	for (int i = 0; i < ourBitmap.getSize(); i++)
     	    sb.append(ourBitmap.getIndexMap().get(value).get(i) ? '1' : '0');
@@ -377,70 +380,24 @@ public class DBApp {
     }
 
     public static void main(String[] args) throws IOException {
-        String[] columns = {"id", "name", "major", "semester", "gpa"};
-        createTable("pepsi", columns);
+    	FileManager.reset();
+    	String[] cols = {"id", "name", "major", "semester", "gpa"};
+    	createTable("student", cols);
 
-        String[] r1 = {"1", "stud1", "CS", "5", "0.9"};
-        String[] r2 = {"2", "stud2", "BI", "7", "1.2"};
-        String[] r3 = {"3", "stud3", "CS", "2", "2.4"};
-        String[] r4 = {"4", "stud4", "DMET", "9", "1.2"};
-        String[] r5 = {"5", "stud5", "BI", "4", "3.5"};
+    	String[] r1 = {"1", "stud1", "CS", "5", "0.9"};
+    	insert("student", r1);
 
-        insert("pepsi", r1);
-        insert("pepsi", r2);
-        insert("pepsi", r3);
-        insert("pepsi", r4);
-        insert("pepsi", r5);
-        
-        
-        
+    	String[] r2 = {"2", "stud2", "BI", "7", "1.2"};
+    	insert("student", r2);
 
-        System.out.println("Output of selecting the whole table content:");
-        ArrayList<String[]> result1 = select("pepsi");
+    	String[] r3 = {"3", "stud3", "CS", "2", "2.4"};
+    	insert("student", r3);
 
-        for (String[] array : result1) {
-            for (String str : array) {
-                System.out.print(str + " ");
-            }
-            System.out.println();
-        }
+    	createBitMapIndex("student", "gpa");
+    	createBitMapIndex("student", "major");
 
-        System.out.println("--------------------------------");
-        System.out.println("Output of selecting by position:");
-        ArrayList<String[]> result2 = select("pepsi", 1, 1);
-        for (String[] array : result2) {
-            for (String str : array) {
-                System.out.print(str + " ");
-            }
-            System.out.println();
-        }
+    	System.out.println("Bitmap of the value of CS from the major index: " + getValueBits("student", "major", "CS"));
+    	System.out.println("Bitmap of the value of 1.2 from the gpa index: " + getValueBits("student", "gpa", "1.2"));
 
-        System.out.println("--------------------------------");
-        System.out.println("Output of selecting the output by column condition:");
-        ArrayList<String[]> result3 = select("pepsi", new String[]{"gpa"}, new String[]{"1.2"});
-        for (String[] array : result3) {
-            for (String str : array) {
-                System.out.print(str + " ");
-            }
-            System.out.println();
-        }
-
-        System.out.println("--------------------------------");
-        System.out.println("Full Trace of the table:");
-        System.out.println(getFullTrace("pepsi"));
-        
-
-        System.out.println("--------------------------------");
-        System.out.println("Last Trace of the table:");
-        System.out.println(getLastTrace("pepsi"));
-
-        System.out.println("--------------------------------");
-        System.out.println("Trace of the Tables Folder:");
-        System.out.println(FileManager.trace());
-        FileManager.reset();
-
-        System.out.println("--------------------------------");
-        System.out.println("Trace of the Tables Folder after resetting:");
-        System.out.println(FileManager.trace());
     }
 }
