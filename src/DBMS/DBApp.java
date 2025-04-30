@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 
 public class DBApp {
     static HashMap<String, ArrayList<String>> traceMap = new HashMap<>();
@@ -176,6 +177,7 @@ public class DBApp {
     //////////////////////////////CONDITIONAL SELECT///////////////////////////////////
     ///////////////////////////////////////////////////////////////////////////////////
     
+
     public static ArrayList<String[]> select(String tableName, String[] cols, String[] values) {
       // measuring the execution time for logging purposes
         long start = System.currentTimeMillis();
@@ -219,7 +221,8 @@ public class DBApp {
             // we loop through each record in the page
             for (String[] record : page.getRecords()) {
                 boolean matchesAll = true;
-                // er check if the record matches all the conditions
+
+                // we check if the record matches all the conditions
                 for (int i = 0; i < cols.length; i++) {
                     if (!record[colIndexes[i]].equals(values[i])) {
                         matchesAll = false;
@@ -259,6 +262,84 @@ public class DBApp {
 
 
     
+    ///////////////////////////////////////////////////////////////////////////////////
+    //////////////////////////////  createBitMapIndex  //////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////////////////
+    
+    public static void createBitMapIndex(String tableName, String colName){
+    	Table table = FileManager.loadTable(tableName);
+    	 if (table == null) {
+             System.out.println("Table not found: " + tableName);
+         }
+    	 String[] columnNames = table.getColumnNames();
+         ArrayList<Page> pages = table.getPages();
+         ArrayList<String> indexValues = new ArrayList<>();
+         int colIndex = -1;
+         
+         for(int i=0 ; i<columnNames.length ; i++){
+        	 if(columnNames[i] == colName){
+        		 colIndex = i;
+        	 }
+         }
+         BitmapIndex index = new BitmapIndex();
+         if(colIndex == -1){
+        	 System.out.println("column not found");
+        	 return;
+         }
+         else{
+        	 for(int pageIndex=0 ; pageIndex<table.getPages().size() ; pageIndex++){
+                 Page currPage = FileManager.loadTablePage(tableName, pageIndex);
+                 for(int recordIndex = 0; recordIndex<currPage.getRecords().size(); recordIndex++){
+                	 String[] currentRecord = currPage.getRecords().get(recordIndex);
+                	 indexValues.add(currentRecord[colIndex]);
+                 }
+        	 }
+        	 index.buildIndex(indexValues);
+         }
+         FileManager.storeTableIndex(tableName, colName, index); // Save to disk
+    }
+
+    ///////////////////////////////////////////////////////////////////////////////////
+    //////////////////////////////////  selectIndex  //////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////////////////
+    
+    //public static ArrayList<String []> selectIndex (String tableName, String[] cols, String[] vals){
+    	
+    //}
+    
+
+    ///////////////////////////////////////////////////////////////////////////////////
+    ////////////////////////////////  getValueBits  ////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////////////////
+    
+    public static String getValueBits(String tableName, String colName, String value){
+    	BitmapIndex ourBitmap = FileManager.loadTableIndex(tableName, colName);
+    	StringBuilder sb = new StringBuilder();
+    	for (int i = 0; i < ourBitmap.getSize(); i++)
+    	    sb.append(ourBitmap.getIndexMap().get(value).get(i) ? '1' : '0');
+    	String bit_map_sequence = sb.toString();
+    	return bit_map_sequence;
+    }
+    
+    
+    ///////////////////////////////////////////////////////////////////////////////////
+    //////////////////////////////  validateRecords  //////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////////////////
+    
+    
+    //public static ArrayList<String []> validateRecords(String tableName){
+    	
+    //}
+
+    
+    ///////////////////////////////////////////////////////////////////////////////////
+    //////////////////////////////  recoverRecords  ///////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////////////////
+   
+    public static void recoverRecords(String tableName, ArrayList<String[]> missing){
+    	
+    	
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////
     ////////////////////////////////GET FULL TRACE/////////////////////////////////////

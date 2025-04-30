@@ -1,0 +1,29 @@
+Member 1:
+name: Walid Moussa Khalil Ibrahim
+Tutorial: 28
+ID: 58-1001
+Email: walid.ibrahim@student.guc.edu.eg
+Major: MET
+
+
+Member 2:
+name: Omar Gamal Mohamed
+Tutorial: T-10
+ID: 58-8624
+Email: omar.gamalmohamed@student.guc.edu.eg
+Major: MET
+
+Member 3:
+name: Basmala Mahrous Rashad
+Tutorial: T-15
+ID: 58-24523
+Email: basmala.rashad@student.guc.edu.eg
+Major: BI
+
+
+Member 4:
+name: Valerie Antonious
+Tutorial: T11
+ID: 59-30018
+Email: Valerie.mansi@student.guc.edu.eg
+Major: BI
