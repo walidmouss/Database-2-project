@@ -4,9 +4,11 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.BitSet;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class DBApp {
     static HashMap<String, ArrayList<String>> traceMap = new HashMap<>();
@@ -91,7 +93,46 @@ public class DBApp {
                 //System.out.println("inserted record in existing page");
             }
         }
+        /////////////////////nebda2 sho8l hena//////////////////////////
+        String[] columnNames = table.getColumnNames();
+        for (int colIndex = 0; colIndex < columnNames.length; colIndex++) {
+            String currColumn = columnNames[colIndex];
+            BitmapIndex tempBitMap = FileManager.loadTableIndex(tableName, currColumn);
 
+            if (tempBitMap == null) {
+                //System.out.println("There is no bitmap for column: " + currColumn);
+            } else {
+                Map<String, BitSet> actualBitMap = tempBitMap.getIndexMap();
+                int currentSize = tempBitMap.getSize();
+                String newValue = record[colIndex];
+
+
+                for (Map.Entry<String, BitSet> entry : actualBitMap.entrySet()) {
+                    String key = entry.getKey();
+                    BitSet bitSet = entry.getValue();
+
+                    if (key.equals(newValue)) {
+                        bitSet.set(currentSize); // Add 1
+                    } else {
+                        bitSet.clear(currentSize); // Add 0
+                    }
+                }
+
+                // if the new value is not in the map yet create it
+                if (!actualBitMap.containsKey(newValue)) {
+                    BitSet newBitSet = new BitSet(currentSize + 1);
+                    newBitSet.set(currentSize); // 1 at the end, rest are 0 by default
+                    actualBitMap.put(newValue, newBitSet);
+                }
+
+                tempBitMap.setSize(currentSize + 1); // Increase bitmap size
+                FileManager.storeTableIndex(tableName, currColumn, tempBitMap);
+
+            }
+        }
+
+
+        
         //System.out.println("CURRENT PAGES ARE : " + table.getPages());
         FileManager.storeTable(tableName, table);
         long end = System.currentTimeMillis();
@@ -101,6 +142,10 @@ public class DBApp {
         traceMap.get(tableName).add(log);
     }
 
+    /////////////////////////////////////////////////////////////////////////////////////////////////////
+    ///////////////////////////////////////// function mesh fakerha /////////////////////////////////////
+    /////////////////////////////////////////////////////////////////////////////////////////////////////
+    
     public static ArrayList<String[]> select(String tableName) {
         long start = System.currentTimeMillis();
         Table current_table = FileManager.loadTable(tableName);
@@ -314,13 +359,8 @@ public class DBApp {
     
     public static String getValueBits(String tableName, String colName, String value){
     	BitmapIndex ourBitmap = FileManager.loadTableIndex(tableName, colName);
-    	if(ourBitmap == null){
-    		System.out.print("Hakoona matata");
-    	}
-    	StringBuilder sb = new StringBuilder();
-    	for (int i = 0; i < ourBitmap.getSize(); i++)
-    	    sb.append(ourBitmap.getIndexMap().get(value).get(i) ? '1' : '0');
-    	String bit_map_sequence = sb.toString();
+
+    	String bit_map_sequence = ourBitmap.getBitString(value);
     	return bit_map_sequence;
     }
     
@@ -396,6 +436,16 @@ public class DBApp {
     	createBitMapIndex("student", "gpa");
     	createBitMapIndex("student", "major");
 
+    	System.out.println("Bitmap of the value of CS from the major index: " + getValueBits("student", "major", "CS"));
+    	System.out.println("Bitmap of the value of 1.2 from the gpa index: " + getValueBits("student", "gpa", "1.2"));
+
+    	String[] r4 = {"4", "stud4", "CS", "9", "1.2"};
+    	insert("student", r4);
+
+    	String[] r5 = {"5", "stud5", "BI", "4", "3.5"};
+    	insert("student", r5);
+
+    	System.out.println("After new insertions:");
     	System.out.println("Bitmap of the value of CS from the major index: " + getValueBits("student", "major", "CS"));
     	System.out.println("Bitmap of the value of 1.2 from the gpa index: " + getValueBits("student", "gpa", "1.2"));
 

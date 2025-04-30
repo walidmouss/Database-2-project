@@ -48,4 +48,8 @@ public class BitmapIndex implements Serializable {
     public void setSize(int size) {
         this.size = size;
     }
+    
+
+
+
 }
