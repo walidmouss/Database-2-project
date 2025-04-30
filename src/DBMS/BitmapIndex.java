@@ -4,7 +4,7 @@ import java.util.*;
 
 public class BitmapIndex implements Serializable {
     private static final long serialVersionUID = 1L;
-// 1.2 : 100101
+
     private Map<String, BitSet> indexMap;
     private int size;
 

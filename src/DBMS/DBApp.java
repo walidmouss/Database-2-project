@@ -93,7 +93,8 @@ public class DBApp {
                 //System.out.println("inserted record in existing page");
             }
         }
-        /////////////////////nebda2 sho8l hena//////////////////////////
+        /////////////////////nebda2 sho8l hena for ms2 task//////////////////////////
+        
         String[] columnNames = table.getColumnNames();
         for (int colIndex = 0; colIndex < columnNames.length; colIndex++) {
             String currColumn = columnNames[colIndex];
@@ -142,9 +143,10 @@ public class DBApp {
         traceMap.get(tableName).add(log);
     }
 
-    /////////////////////////////////////////////////////////////////////////////////////////////////////
-    ///////////////////////////////////////// function mesh fakerha /////////////////////////////////////
-    /////////////////////////////////////////////////////////////////////////////////////////////////////
+
+	    ///////////////////////////////////////////////////////////////////////
+	    /////////////////////////////SELECT WHOLE TABLE////////////////////////
+	    ///////////////////////////////////////////////////////////////////////
     
     public static ArrayList<String[]> select(String tableName) {
         long start = System.currentTimeMillis();
@@ -181,7 +183,7 @@ public class DBApp {
 
 
     ///////////////////////////////////////////////////////////////////////
-    /////////////////////////////SELECT WHOLE TABLE////////////////////////
+    ///////////////////////////SELECT RECORD IN PAGE///////////////////////
     ///////////////////////////////////////////////////////////////////////
     
     public static ArrayList<String[]> select(String tableName, int pageNumber, int recordNumber) {
@@ -256,6 +258,7 @@ public class DBApp {
                 return new ArrayList<>();
             }
         }
+        // cs : 101
 
         ArrayList<ArrayList<Integer>> recordPerPage = new ArrayList<>();
 
@@ -348,9 +351,46 @@ public class DBApp {
     //////////////////////////////////  selectIndex  //////////////////////////////////////
     ///////////////////////////////////////////////////////////////////////////////////
     
-    //public static ArrayList<String []> selectIndex (String tableName, String[] cols, String[] vals){
-    	
-    //}
+    public static ArrayList<String []> selectIndex (String tableName, String[] cols, String[] vals){
+
+    	Table table = FileManager.loadTable(tableName);
+    	if (table == null) {
+            System.out.println("Table not found: " + tableName);
+            return new ArrayList<>();
+        }
+    	int sizeOfColumns = -1;
+        BitSet globalAnswer = null;
+
+        // Determine which columns have indices
+        List<Integer> indexedCols = new ArrayList<>();
+        for (int i = 0; i < cols.length; i++) {
+            BitmapIndex index = FileManager.loadTableIndex(tableName, cols[i]);
+            if (index != null) {
+                indexedCols.add(i);
+                if (sizeOfColumns == -1) {
+                    sizeOfColumns = index.getSize();
+                    globalAnswer = new BitSet(sizeOfColumns);
+                    globalAnswer.set(0, sizeOfColumns);
+                }
+            }
+        }
+    	// all cols have bitmap index tables
+    	if(indexedCols.size() == cols.length){
+    		for(int i=0 ; i<cols.length ; i++){
+    			BitmapIndex currBitmap = FileManager.loadTableIndex(tableName, cols[i]);
+    			BitSet currBitSet = currBitmap.getIndexMap().get(vals[i]);
+    			globalAnswer.and(currBitSet);
+    			
+    		}
+    	}else if(indexedCols.size() == 0){
+    		 ArrayList<String[]> selectedRecords = select(tableName,cols, vals);
+    		 return selectedRecords;
+    	}else if(indexedCols.size() == 1){
+    		
+    	}else{
+    		
+    	}
+    }
     
 
     ///////////////////////////////////////////////////////////////////////////////////
