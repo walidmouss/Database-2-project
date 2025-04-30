@@ -381,6 +381,17 @@ public class DBApp {
     			BitSet currBitSet = currBitmap.getIndexMap().get(vals[i]);
     			globalAnswer.and(currBitSet);
     			
+    			List<Integer> indexOfSelectedRecords = new ArrayList<>();
+    			for (int j = globalAnswer.nextSetBit(0); j >= 0; j = globalAnswer.nextSetBit(j + 1)) {
+    				indexOfSelectedRecords.add(i);
+    			}
+    			for(int currIndex : indexOfSelectedRecords){
+	    			int record = currIndex % 2;
+	    			int page = currIndex / 2;
+	    			ArrayList<String[]> selectedRecords = select(tableName, page,record);
+	    			return selectedRecords;
+    			}
+    			
     		}
     	}else if(indexedCols.size() == 0){
     		 ArrayList<String[]> selectedRecords = select(tableName,cols, vals);
