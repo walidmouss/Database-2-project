@@ -376,6 +376,7 @@ public class DBApp {
         }
     	// all cols have bitmap index tables
     	if(indexedCols.size() == cols.length){
+			ArrayList<String[]> selectedRecords = new ArrayList<String[]>();
     		for(int i=0 ; i<cols.length ; i++){
     			BitmapIndex currBitmap = FileManager.loadTableIndex(tableName, cols[i]);
     			BitSet currBitSet = currBitmap.getIndexMap().get(vals[i]);
@@ -383,23 +384,64 @@ public class DBApp {
     			
     			List<Integer> indexOfSelectedRecords = new ArrayList<>();
     			for (int j = globalAnswer.nextSetBit(0); j >= 0; j = globalAnswer.nextSetBit(j + 1)) {
-    				indexOfSelectedRecords.add(i);
+    				indexOfSelectedRecords.add(j);
     			}
     			for(int currIndex : indexOfSelectedRecords){
 	    			int record = currIndex % 2;
 	    			int page = currIndex / 2;
-	    			ArrayList<String[]> selectedRecords = select(tableName, page,record);
-	    			return selectedRecords;
+	    			selectedRecords.addAll(select(tableName, page,record));
     			}
     			
     		}
+			return selectedRecords;
     	}else if(indexedCols.size() == 0){
     		 ArrayList<String[]> selectedRecords = select(tableName,cols, vals);
     		 return selectedRecords;
+    		 ///////////////////////////////////////////only one bitmapindex /////////////////////////////////
     	}else if(indexedCols.size() == 1){
-    		
+
+    	    // imposter is the index of the column with bitmapIndex
+    	    int imposter = indexedCols.get(0);
+    	    
+    	    ArrayList<String[]> selectedRecords = new ArrayList<String[]>();
+
+    	    for(int i = 0 ; i < cols.length ; i++){
+    	        if(i != imposter){
+    	            // Keep adding non-indexed matches to the same result list
+    	            selectedRecords.addAll(select(tableName, new String[]{cols[i]}, new String[]{vals[i]}));
+    	        }
+    	        else{
+    	            BitmapIndex currBitmap = FileManager.loadTableIndex(tableName, cols[i]);
+    	            BitSet currBitSet = currBitmap.getIndexMap().get(vals[i]);
+    	            if (currBitSet == null) continue;
+    	            globalAnswer.and(currBitSet);
+    	            
+    	            List<Integer> indexOfSelectedRecords = new ArrayList<>();
+    	            for (int j = globalAnswer.nextSetBit(0); j >= 0; j = globalAnswer.nextSetBit(j + 1)) {
+    	                indexOfSelectedRecords.add(j);
+    	            }
+    	            for(int currIndex : indexOfSelectedRecords){
+    	                int record = currIndex % 2;
+    	                int page = currIndex / 2;
+    	                selectedRecords.addAll(select(tableName, page, record));
+    	            }
+    	        }
+    	    }
+    	    return selectedRecords;
+
     	}else{
-    		
+//    		ArrayList<String[]> selectedRecords = new ArrayList<String[]>();
+//    		for(int i=0 ; i<cols.length ; i++){
+//    			for( int indexedCol : indexedCols){
+//    				if(i == indexedCol){
+//    					//this means you are standing on a col with bitmap indexing
+//    				}
+//    				else{
+//    					selectedRecords.addAll(select(tableName, new String[]{cols[i]}, new String[]{vals[i]}));
+//    				}
+//    			}
+//    		}
+    		System.out.println("GoodLuck fixing this ... hatetbeset awyyy =D <3 ");
     	}
     }
     
@@ -499,6 +541,17 @@ public class DBApp {
     	System.out.println("After new insertions:");
     	System.out.println("Bitmap of the value of CS from the major index: " + getValueBits("student", "major", "CS"));
     	System.out.println("Bitmap of the value of 1.2 from the gpa index: " + getValueBits("student", "gpa", "1.2"));
+
+    	System.out.println("Output of selection using index when all columns of the select conditions are indexed:");
+
+    	ArrayList<String[]> result1 = selectIndex("student", new String[] {"major", "gpa"}, new String[] {"CS", "1.2"});
+
+    	for (String[] array : result1) {
+    	    for (String str : array) {
+    	        System.out.print(str + " ");
+    	    }
+    	    System.out.println();
+    	}
 
     }
 }
